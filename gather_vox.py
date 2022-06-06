@@ -128,51 +128,6 @@ def get_points_from_vox(q, name_list):
         voxel_model_file = open(name_list[idx][1], 'rb')
         voxel_model_256_crude = binvox_rw.read_as_3d_array(voxel_model_file).data.astype(np.int32)
         voxel_model_256 = voxel_model_256_crude
-        # voxel_model_256 = hierarchicalfloodFill(voxel_model_256_crude, 256)
-
-        # #carve the voxels from side views:
-        # #top direction = Y(j) positive direction
-        # dim_voxel = 256
-        # top_view = np.max(voxel_model_256, axis=1)
-        # left_min = np.full([dim_voxel,dim_voxel],dim_voxel,np.int32)
-        # left_max = np.full([dim_voxel,dim_voxel],-1,np.int32)
-        # front_min = np.full([dim_voxel,dim_voxel],dim_voxel,np.int32)
-        # front_max = np.full([dim_voxel,dim_voxel],-1,np.int32)
-        
-        # for j in range(dim_voxel):
-        #     for k in range(dim_voxel):
-        #         occupied = False
-        #         for i in range(dim_voxel):
-        #             if voxel_model_256[i,j,k]>0:
-        #                 if not occupied:
-        #                     occupied = True
-        #                     left_min[j,k] = i
-        #                 left_max[j,k] = i
-        
-        # for i in range(dim_voxel):
-        #     for j in range(dim_voxel):
-        #         occupied = False
-        #         for k in range(dim_voxel):
-        #             if voxel_model_256[i,j,k]>0:
-        #                 if not occupied:
-        #                     occupied = True
-        #                     front_min[i,j] = k
-        #                 front_max[i,j] = k
-        
-        # for i in range(dim_voxel):
-        #     for k in range(dim_voxel):
-        #         if top_view[i,k]>0:
-        #             fill_flag = False
-        #             for j in range(dim_voxel-1,-1,-1):
-        #                 if voxel_model_256[i,j,k]>0:
-        #                     fill_flag = True
-        #                 else:
-        #                     if left_min[j,k]<i and left_max[j,k]>i and front_min[i,j]<k and front_max[i,j]>k:
-        #                         if fill_flag:
-        #                             voxel_model_256[i,j,k]=1
-        #                     else:
-        #                         fill_flag = False
-                
         
         #compress model 256 -> 64
         dim_voxel = 64

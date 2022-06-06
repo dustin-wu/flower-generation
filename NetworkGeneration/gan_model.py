@@ -15,13 +15,15 @@ class Generator(tf.keras.Model):
         self.gen_dim = gen_dim # Used to determine size of generator architecture
         self.dis_dim = dis_dim # Used to determine size of discriminator architecture
 
-        self.gen_linear1 = tf.Variable(tf.random.truncated_normal(shape=[self.z_dim, self.gen_dim], stddev=.1))
+        glorot_uniform = tf.keras.initializers.GlorotUniform()
+
+        self.gen_linear1 = tf.Variable(glorot_uniform(shape=[self.z_dim, self.gen_dim]))
         self.gen_b1 = tf.Variable(tf.zeros(shape=[self.gen_dim]))
 
-        self.gen_linear2 = tf.Variable(tf.random.truncated_normal(shape=[self.gen_dim, self.gen_dim], stddev=.1))
+        self.gen_linear2 = tf.Variable(glorot_uniform(shape=[self.gen_dim, self.gen_dim]))
         self.gen_b2 = tf.Variable(tf.zeros(shape=[self.gen_dim]))
 
-        self.gen_linear3 = tf.Variable(tf.random.truncated_normal(shape=[self.gen_dim, self.z_vector_dim], stddev=.1))
+        self.gen_linear3 = tf.Variable(glorot_uniform(shape=[self.gen_dim, self.z_vector_dim]))
         self.gen_b3 = tf.Variable(tf.zeros(shape=[self.z_vector_dim]))
 
     # MLP forward pass, with sigmoid activation 
@@ -43,13 +45,15 @@ class Discriminator(tf.keras.Model):
         self.gen_dim = gen_dim
         self.dis_dim = dis_dim
 
-        self.dis_linear1 = tf.Variable(tf.random.truncated_normal(shape=[self.z_vector_dim, self.dis_dim], stddev=.1))
+        glorot_uniform = tf.keras.initializers.GlorotUniform()
+
+        self.dis_linear1 = tf.Variable(glorot_uniform(shape=[self.z_vector_dim, self.dis_dim]))
         self.dis_b1 = tf.Variable(tf.zeros(shape=[self.dis_dim]))
 
-        self.dis_linear2 = tf.Variable(tf.random.truncated_normal(shape=[self.dis_dim, self.dis_dim], stddev=.1))
+        self.dis_linear2 = tf.Variable(glorot_uniform(shape=[self.dis_dim, self.dis_dim]))
         self.dis_b2 = tf.Variable(tf.zeros(shape=[self.dis_dim]))
 
-        self.dis_linear3 = tf.Variable(tf.random.truncated_normal(shape=[self.dis_dim, 1], stddev=.1))
+        self.dis_linear3 = tf.Variable(glorot_uniform(shape=[self.dis_dim, 1]))
         self.dis_b3 = tf.Variable(tf.zeros(shape=[1]))
 
     def call(self, z_vector):
@@ -146,7 +150,7 @@ class IMGAN(tf.keras.Model):
                         d_real = self.discriminator(batch_vector_z)
                         gen_output = self.generator(batch_z)
                         d_fake = self.discriminator(gen_output)
-                        dis_loss = tf.reduce_mean(d_real) - tf.reduce_mean(d_fake) # WGAN critic loss
+                        dis_loss = -(tf.reduce_mean(d_real) - tf.reduce_mean(d_fake)) # WGAN critic loss
                         grad_penalty = self.gradient_penalty(batch_size, batch_vector_z, gen_output)
                         dis_loss += 10 * grad_penalty
 
@@ -159,7 +163,7 @@ class IMGAN(tf.keras.Model):
                 with tf.GradientTape() as tape:
                     gen_output = self.generator(batch_z)
                     d_fake = self.discriminator(gen_output)
-                    gen_loss = tf.reduce_mean(d_fake) # WGAN generator loss
+                    gen_loss = -tf.reduce_mean(d_fake) # WGAN generator loss
 
                 train_vars = self.generator.trainable_variables
                 gradients = tape.gradient(gen_loss, train_vars)
@@ -181,7 +185,7 @@ class IMGAN(tf.keras.Model):
                 print("Saved discriminator checkpoint for step {}: {}".format(int(self.dis_ckpt.step), save_path))
 
     # Get a certain number of randomly sampled latent space vectors for creating novel objects with the autoencoder
-    def get_z(self, num):
+    def generate_samples(self, num):
         self.gen_ckpt.restore(self.gen_manager.latest_checkpoint)
         if self.gen_manager.latest_checkpoint:
             print("Restored generator from {}".format(self.gen_manager.latest_checkpoint))

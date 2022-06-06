@@ -6,7 +6,7 @@ import mcubes
 import h5py
 from z2voxel import z2voxel, write_ply_triangle
 
-# Code draws from the Pytorch implementation of the IM-net paper: https://github.com/czq142857/IM-NET-pytorch
+# Code draws guidance from the Pytorch implementation of the IM-net paper: https://github.com/czq142857/IM-NET-pytorch
 # Adapted to use tensorflow 2, which is used in cs1470
 
 # Encoder: Encode voxelized models into latent "z" vectors
@@ -16,21 +16,22 @@ class Encoder(tf.keras.Model):
         self.enc_dim = enc_dim # Used to determine the sizes of the encoder architecture
         self.z_dim = z_dim # Latent space dimension
         
-        self.enc_filter1 = tf.Variable(tf.random.truncated_normal(shape=[4, 4, 4, 1, self.enc_dim], stddev=.1))
-        self.enc_b1 = tf.Variable(tf.random.truncated_normal(shape=[self.enc_dim], stddev=.1))
-
-        self.enc_filter2 = tf.Variable(tf.random.truncated_normal(shape=[4, 4, 4, self.enc_dim, self.enc_dim*2], stddev=.1))
-        self.enc_b2 = tf.Variable(tf.random.truncated_normal(shape=[self.enc_dim*2], stddev=.1))
-
-        self.enc_filter3 = tf.Variable(tf.random.truncated_normal(shape=[4, 4, 4, self.enc_dim*2, self.enc_dim*4], stddev=.1))
-        self.enc_b3 = tf.Variable(tf.random.truncated_normal(shape=[self.enc_dim*4], stddev=.1))
-
-        self.enc_filter4 = tf.Variable(tf.random.truncated_normal(shape=[4, 4, 4, self.enc_dim*4, self.enc_dim*8], stddev=.1))
-        self.enc_b4 = tf.Variable(tf.random.truncated_normal(shape=[self.enc_dim*8], stddev=.1))
-
-        self.enc_filter5 = tf.Variable(tf.random.truncated_normal(shape=[4, 4, 4, self.enc_dim*8, self.z_dim], stddev=.1))
-        self.enc_b5 = tf.Variable(tf.random.truncated_normal(shape=[self.z_dim], stddev=.1))
+        glorot_uniform = tf.keras.initializers.GlorotUniform()
         
+        self.enc_filter1 = tf.Variable(glorot_uniform(shape=[4, 4, 4, 1, self.enc_dim]))
+        self.enc_b1 = tf.Variable(tf.zeros(shape=[self.enc_dim]))
+
+        self.enc_filter2 = tf.Variable(glorot_uniform(shape=[4, 4, 4, self.enc_dim, self.enc_dim*2]))
+        self.enc_b2 = tf.Variable(tf.zeros(shape=[self.enc_dim*2]))
+
+        self.enc_filter3 = tf.Variable(glorot_uniform(shape=[4, 4, 4, self.enc_dim*2, self.enc_dim*4]))
+        self.enc_b3 = tf.Variable(tf.zeros(shape=[self.enc_dim*4]))
+
+        self.enc_filter4 = tf.Variable(glorot_uniform(shape=[4, 4, 4, self.enc_dim*4, self.enc_dim*8]))
+        self.enc_b4 = tf.Variable(tf.zeros(shape=[self.enc_dim*8]))
+
+        self.enc_filter5 = tf.Variable(glorot_uniform(shape=[4, 4, 4, self.enc_dim*8, self.z_dim]))
+        self.enc_b5 = tf.Variable(tf.zeros(shape=[self.z_dim]))
         
     # The forward pass is akin to a typical CNN, just with 3D convolutions
     def call(self, vox3d):
@@ -69,27 +70,29 @@ class Decoder(tf.keras.Model):
         self.point_dim = point_dim # Dimensonality of the points
         self.dec_dim = dec_dim # Used to determine the sizes of the decoder architecture
 
-        self.dec_linear1 = tf.Variable(tf.random.truncated_normal(shape=[self.z_dim + self.point_dim, self.dec_dim*8], stddev=.1))
-        self.dec_b1 = tf.Variable(tf.random.truncated_normal(shape=[self.dec_dim*8], stddev=.1))
+        glorot_uniform = tf.keras.initializers.GlorotUniform()
 
-        self.dec_linear2 = tf.Variable(tf.random.truncated_normal(shape=[self.dec_dim*8, self.dec_dim*8], stddev=.1))
-        self.dec_b2 = tf.Variable(tf.random.truncated_normal(shape=[self.dec_dim*8], stddev=.1))
+        self.dec_linear1 = tf.Variable(glorot_uniform(shape=[self.z_dim + self.point_dim, self.dec_dim*8]))
+        self.dec_b1 = tf.Variable(tf.zeros(shape=[self.dec_dim*8]))
 
-        self.dec_linear3 = tf.Variable(tf.random.truncated_normal(shape=[self.dec_dim*8, self.dec_dim*8], stddev=.1))
-        self.dec_b3 = tf.Variable(tf.random.truncated_normal(shape=[self.dec_dim*8], stddev=.1))
+        self.dec_linear2 = tf.Variable(glorot_uniform(shape=[self.dec_dim*8, self.dec_dim*8]))
+        self.dec_b2 = tf.Variable(tf.zeros(shape=[self.dec_dim*8]))
 
-        self.dec_linear4 = tf.Variable(tf.random.truncated_normal(shape=[self.dec_dim*8, self.dec_dim*4], stddev=.1))
-        self.dec_b4 = tf.Variable(tf.random.truncated_normal(shape=[self.dec_dim*4], stddev=.1))
+        self.dec_linear3 = tf.Variable(glorot_uniform(shape=[self.dec_dim*8, self.dec_dim*8]))
+        self.dec_b3 = tf.Variable(tf.zeros(shape=[self.dec_dim*8]))
 
-        self.dec_linear5 = tf.Variable(tf.random.truncated_normal(shape=[self.dec_dim*4, self.dec_dim*2], stddev=.1))
-        self.dec_b5 = tf.Variable(tf.random.truncated_normal(shape=[self.dec_dim*2], stddev=.1))
+        self.dec_linear4 = tf.Variable(glorot_uniform(shape=[self.dec_dim*8, self.dec_dim*4]))
+        self.dec_b4 = tf.Variable(tf.zeros(shape=[self.dec_dim*4]))
 
-        self.dec_linear6 = tf.Variable(tf.random.truncated_normal(shape=[self.dec_dim*2, self.dec_dim], stddev=.1))
-        self.dec_b6 = tf.Variable(tf.random.truncated_normal(shape=[self.dec_dim], stddev=.1))
+        self.dec_linear5 = tf.Variable(glorot_uniform(shape=[self.dec_dim*4, self.dec_dim*2]))
+        self.dec_b5 = tf.Variable(tf.zeros(shape=[self.dec_dim*2]))
 
-        self.dec_linear7 = tf.Variable(tf.random.truncated_normal(shape=[self.dec_dim, 1], stddev=.1))
-        self.dec_b7 = tf.Variable(tf.random.truncated_normal(shape=[1], stddev=.1))
+        self.dec_linear6 = tf.Variable(glorot_uniform(shape=[self.dec_dim*2, self.dec_dim]))
+        self.dec_b6 = tf.Variable(tf.zeros(shape=[self.dec_dim]))
 
+        self.dec_linear7 = tf.Variable(glorot_uniform(shape=[self.dec_dim, 1]))
+        self.dec_b7 = tf.Variable(tf.zeros(shape=[1]))
+    
     # Forward pass is akin to a typical MLP, at the end the output is clipped to be roughly 0 or 1
     def call(self, points, z_vector, is_training=False):
         z_repeated = tf.reshape(z_vector, [-1, 1, self.z_dim])
@@ -115,7 +118,7 @@ class Decoder(tf.keras.Model):
         dec6 = tf.nn.leaky_relu(dec6, alpha=0.02)
 
         dec7 = tf.matmul(dec6, self.dec_linear7) + self.dec_b7
-        dec7 = tf.maximum(tf.minimum(dec7, dec7*0.01*0.99), dec7*0.01) # approximate clipping helps with convergence
+        dec7 = tf.maximum(tf.minimum(dec7, dec7*0.01+0.99), dec7*0.01) # approximate clipping helps with convergence
 
         return dec7
 
@@ -235,7 +238,7 @@ class IMAE(tf.keras.Model):
                 print("Saved checkpoint for step {}: {}".format(int(self.ckpt.step), save_path))
 
     # Call just the encoder network to get z vectors from training examples for use in GAN
-    def get_z(self, config):
+    def get_z_dataset(self, config):
         self.ckpt.restore(self.manager.latest_checkpoint)
         if self.manager.latest_checkpoint:
             print("Restored from {}".format(self.manager.latest_checkpoint))
@@ -257,7 +260,7 @@ class IMAE(tf.keras.Model):
         print("Created z vectors dataset")
 
     # Generate meshes corresponding to z-vectors generated by the encoder from training examples
-    def test_mesh(self, config):
+    def ae_mesh_test(self, config):
         st = config.start
         en = config.end
         sample_dir = config.sample_dir
@@ -279,7 +282,7 @@ class IMAE(tf.keras.Model):
             write_ply_triangle(sample_dir+"/"+str(t)+"_vox.ply", vertices, triangles)
     
     # Given a batch of z-vectors, generate corresponding meshes
-    def test_z(self, config, batch_z, dim):
+    def ae_z_test(self, config, batch_z, dim):
         self.ckpt.restore(self.manager.latest_checkpoint)
         if self.manager.latest_checkpoint:
             print("Restored from {}".format(self.manager.latest_checkpoint))
