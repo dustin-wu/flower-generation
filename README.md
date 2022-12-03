@@ -1,6 +1,6 @@
 # flower-generation
 
-The writeup of this project is Onboarding_Project_Writeup.pdf.
+The writeup of this project is Project_Writeup.pdf.
 
 A significant amount of inspiration is drawn from the works referenced in the writeup, and especially from the [original IM-Net implementation](https://github.com/czq142857/IM-NET-pytorch).
 
