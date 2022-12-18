@@ -1,6 +1,8 @@
 # flower-generation
 
-The writeup of this project is Project_Writeup.pdf.
+![Example of generated flowers](flowers.png?raw=true "Example of Generated Flowers")
+
+A writeup for this project can be found in Project_Writeup.pdf.
 
 A significant amount of inspiration is drawn from the works referenced in the writeup, and especially from the [original IM-Net implementation](https://github.com/czq142857/IM-NET-pytorch).
 
